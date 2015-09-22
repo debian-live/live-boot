@@ -6,106 +6,120 @@
 .TH LIVE\-BOOT conf 22.09.2015 5.0~a5\-1 "Projet Live Systems"
 
 .SH NOM
-\fBpersistence.conf\fP \- Configuration file for persistence media in live\-boot
+\fBpersistence.conf\fP \- Fichier de configuration pour le media de persistance
+dans live\-boot
 
 .SH DESCRIPTION
-If live\-boot probes a persistence volume with the label (or GPT name, or
-file name, but from now on we will just say "label") "persistence", that
-volume's persistence is fully customizable through the \fBpersistence.conf\fP
-file stored on the root of its file system. Any such labeled volume must
-have such a file, or it will be ignored.
+Si live\-boot sondes un volume de persistance avec l'étiquette (ou le nom GPT
+ou le nom de fichier, mais à partir de maintenant nous dirons juste
+"étiquette") "persistence", ce volume de persistance est complètement
+personnalisable à travers le fichier  \fBpersistence.conf\fP stockée à la
+racine de son système de fichier. Tout volume ainsi étiquetté doit avoir un
+fichier comme ceci, ou il sera ignoré.
 .PP
-The format of \fBpersistence.conf\fP allows empty lines and lines starting with
-a "#" (used for comments), both which will be ignored. A so called "custom
-mount" has the format:
+Le format de \fBpersistence.conf\fP permet les lignes vides et les lignes
+commençant avec un "#" (utilisé pour les commentaires), les deux seront
+ignorés. Un "montage personnalisé" a le format :
 .PP
 .RS
 \fIDIR\fP [\fIOPTION\fP]...
 .RE
 .PP
-which roughly translates to "make \fIDIR\fP persistence in the way described by
-the list of \fIOPTION\fPs".
+qui se traduit grossièrement par "fabrique \fIDIR\fP la persistance selon le
+chemin décrit par la liste d'\fIOPTION\fPs".
 .PP
-For each custom mount \fIDIR\fP must be an absolute path that cannot contain
-white spaces or the special . and .. path components, and cannot be /live
-(or any of its sub\-directories).  Once activated all changes (file deletion,
-creation and modification) to \fIDIR\fP on the live file system are stored
-persistently into a path equivalent to \fIDIR\fP on the persistence media,
-called the source directory. The default way to achieve persistence is to
-simply bind\-mount the corresponding source directory to \fIDIR\fP, but this can
-be changed through the use of \fIOPTION\fPs.
+Pour chaque montage personnalisé \fIDIR\fP doit être un chemin absolu qui ne
+peut pas contenir d'espaces blanc ou les composants de chemins . et .. , et
+ne peut pas être /live (ou un de ses sous\-répertoires). Une fois activé,
+toutes les modifications (effacement de fichier, création et modification)
+dans \fIDIR\fP sur le système de fichier live sont emmagasinées de façon
+persistante dans un chemin équivalent à \fIDIR\fP sur le média de persitance,
+appelé le répertoire source. Le moyen par défaut pour accomplir la
+persistance est simplement de bind\-monter le répertoire source correspondant
+à \fIDIR\fP, mais ceci peut être modifié à travers l'utilisation d'\fIOPTION\fPs.
 .PP
-All custom mounts will be done in an order so that no two custom mounts can
-"hide" each other. For instance, if we have the two \fIDIR\fP:s /a and /a/b it
-would always be the case that /a is mounted first, then /a/b. This remains
-true no matter how the lines in \fBpersistence.conf\fP are ordered, or if
-several \fBpersistence.conf\fP files on different persistence media are used at
-the same time. However, it is forbidden for custom mounts to have their
-source directory inside the source directory of another custom mount, so the
-source directories that are auto\-created by live\-boot does not support
-"nested" mounts like /a and /a/b on the same media. In this case you must
-use the \fBsource\fP option (see below) to make sure that they are stored in
-different source directories.
+Tous les montages personnalisés seront réalisés dans un ordre qui ne
+permettent pas à deux montages personnalisés de se "cacher" l'un
+l'autre. Par exemple, si nous avons les deux \fIDIR\fP:s /a et /a/b , /a sera
+toujours monté en premier, puis /a/b. Ceci sera toujours vrai quelque soit
+l'ordre des lignes dans \fBpersistence.conf\fP, ou si plusieurs fichiers
+\fBpersistence.conf\fP sur différents média de persistance sont utilisés au
+même moment. Néanmoins, il est interdit aux montages personnalisés d'avoir
+leurs répertoires source à l'intérieur du répertoire source d'un autre
+montage personnalisé, ainsi les répertoires source qui sont auto\-créés par
+live\-boot ne prennent pas en charge les montages "emboîtés" comme /a et /a/b
+sur le même média. Dans ce cas, vous devez utiliser l'option \fBsource\fP (voir
+ci\-dessous) pour être certains qu'ils ne sont pas emmagasinés dans
+différents répertoires source.
 .PP
-When a source directory doesn't exist on the persistence media for a certain
-custom mount, it will be created automatically, and permissions and
-ownership will be optimistically set according to \fIDIR\fP. It will also be
-bootstrapped by copying the contents of the \fIDIR\fP into its source directory
-on the persistence media. The bootstrapping will not happen when the \fBlink\fP
-or \fBunion\fP options are used (see below).
+Lorsqu'un répertoire source n'existe pas sur le média de persistance pour un
+montage personnalisé donné, il sera créé automatiquement, et les permissions
+et la propriété seront paramétrées avec optimisme en accord avec \fIDIR\fP. Il
+sera également amorcé en copiant le contenu du \fIDIR\fP dans son répertoire
+source sur le média de persistance. L'amorçage ne se passera pas lorsque les
+options \fBlink\fP ou \fBunion\fP sont utilisées (voir ci\-dessous).
 
 .SH OPTIONS
-Custom mounts defined in \fBpersistence.conf\fP accept the following options in
-a comma\-separated list:
+Les montages personnalisés défini dans  \fBpersistence.conf\fP acceptent les
+options suivantes dans une liste séparée par des commas :
 .IP \fBsource\fP=\fIPATH\fP 4
-When given, store the persistence changes into \fIPATH\fP on the persistence
-media. \fIPATH\fP must be a relative path (with respect to the persistence
-media root) that cannot contain white spaces or the special . or .. path
-components, with the exception that it can be just . which means the
-persistence media root. This option is mostly relevant if you want to nest
-custom mounts, which otherwise would cause errors, or if you want to make
-the whole media root available (similar to the now deprecated \fBhome\-rw\fP
-type of persistence).
+Lorsqu'indiqué, emmagasine les modifications persistantes dans \fIPATH\fP sur
+le média de persistance. \fIPATH\fP doit être un chemin relatif (au regard de
+la racine du média de persistance) qui ne peut pas contenit d'espaces blancs
+ou de composants de chemins spéciaux comme . ou .. , avec l'exception qu'il
+peut simplement s'agir de . qui signifie : la racine du média de
+persistance.Cette option est principalement utile si vous voulez imbriquer
+des montages personnalisés qui, autrement, causeraient des erreurs, ou si
+vous voulez rendre disponible la racine du média en entier (équivalent à au
+\- maintenant déprécié \- type de persistance \fBhome\-rw\fP).
 .PP
-The following options are mutually exclusive (only the last given one will
-be in effect):
+Les options suivantes sont mutuellement exclusives (uniquement la dernière
+donnée sera effective) :
 .IP \fBbind\fP 4
-Bind\-mount the source directory to \fIDIR\fP. This is the default.
+Bind\-monte le répertoire source dans \fIDIR\fP. Ceci est le défaut.
 .IP \fBlink\fP 4
-Create the directory structure of the source directory on the persistence
-media in \fIDIR\fP and create symbolic links from the corresponding place in
-\fIDIR\fP to each file in the source directory.  Existing files or directories
-with the same name as any link will be overwritten. Note that deleting the
-links in \fIDIR\fP will only remove the link, not the corresponding file in the
-source; removed links will reappear after a reboot. To permanently add or
-delete a file one must do so directly in the source directory.
+Crée la structure de répertoire du répertoire source sur le média de
+persistance dans \fIDIR\fP et crée des liens symboliques depuis l'emplacement
+correspondant dans \fIDIR\fP pour chaque fichier dans le répertoire source. Les
+fichiers ou répertoire existants avec le même nom aussi bien que tout lien
+seront écrasés. Notez que l'effacement des liens dans \fIDIR\fP supprimera
+uniquement le lien, pas le fichier correspondant dans la source; les liens
+supprimés réapparaîtront après un redémarrage. Pour ajouter ou supprimer un
+fichier de façon permanente, on doit le faire directement dans le répertoire
+source.
 .IP
-Effectively \fBlink\fP will make only files already in the source directory
-persistent, not any other files in \fIDIR\fP. These files must be manually
-added to the source directory to make use of this option, and they will
-appear in \fIDIR\fP in addition to files already there. This option is useful
-when only certain files need to be persistent, not the whole directory
-they're in, e.g. some configuration files in a user's home directory.
+En réalité, \fBlink\fP rendra persistants uniquement les fichiers déjà présents
+dans le répertoire source, aucun autre fichier dans \fIDIR\fP. Ces fichiers
+doivent être ajoutés manuellement au répertoire source pour pouvoir utiliser
+cette option, et ils apparaîtront dans \fIDIR\fP en addition des fichiers déjà
+présents. Cette option est utile lorsque seulement certain fichiers doivent
+être persistants, et pas l'ensemble du répertoire dans lequel ils se
+trouvent, par exemple certains fichiers de configuration dans le répertoire
+de l'utilisateur.
 .IP \fBunion\fP 4
-Save the rw branch of a union on the persistence media, so only the changes
-are stored persistently. This can potentially reduce disk usage compared to
-bind\-mounts, and will not hide files added to the read\-only media. One
-caveat is that the union will use \fIDIR\fP from the image's read\-only file
-system, not the real file system root, so files created after boot (e.g. by
-live\-config) will not appear in the union. This option will use the union
-file system specified by live\-boot's \fBunion\fP boot parameter.
+Sauvegarde la branche rw d'un union sur le média de persistance, ainsi,
+seuls les modifications sont emmagasinnées de façon persistante. Ceci peut
+potentiellement réduire l'utilisation du disque comparé aux montages\-bind,
+et ne cachera pas les fichiers ajoutés au média en lecture seule. Un
+avertissement est que l'union utilisera \fIDIR\fP depuis le système de fichier
+en lecture seule de l'image, pas le système de fichier racine réel, et donc
+les fichiers créés après le démarrage (par exemple par live\-config)
+n'apparaîtront pas dans l'union. Cette option utilisera le système de
+fichier union spécifié par le paramètre de démarrage \fBunion\fP de live\-boot.
 
-.SH DIRECTORIES
+.SH RÉPERTOIRES
 .IP \fB/live/persistence\fP 4
-All persistence volumes will be mounted here (in a directory corresponding
-to the device name). The \fBpersistence.conf\fP file can easily be edited
-through this mount, as well as any source directories (which is especially
-practical for custom mounts using the \fBlink\fP option).
+Tous les volumes de persistance seront montés ici (dans le répertoire
+correspondant au nom de périphérique). Le fichier \fBpersistence.conf\fP peut
+être facilement édité à travers ce montage, de la même façon que tout
+répertoire source (ce qui est spécialement pratique pour les montages
+personnalisés utilisant l'option \fBlink\fP).
 
-.SH EXAMPLES
+.SH EXEMPLES
 
-Let's say we have a persistence volume \fIVOL\fP with the a \fBpersistence.conf\fP
-file containing the following four lines (numbered for ease of reference):
+Disons que nous avons un volume persistant \fIVOL\fP avec un fichier
+\fBpersistence.conf\fP contenantles quatre lignes suivantes (numérotée pour
+faciliter leur référencement) :
 .TP  7
 1.
 /home/user1 link,source=config\-files/user1
@@ -119,15 +133,15 @@ file containing the following four lines (numbered for ease of reference):
 4.
 /usr union
 .PP
-The corresponding source directories are:
+Les répertoires source correspondant sont :
 .TP  7
 1.
-\fIVOL\fP/config\-files/user1 (but it would be \fIVOL\fP/home/user1 without the
-\fBsource\fP option)
+\fIVOL\fP/config\-files/user1 (mais ce serait \fIVOL\fP/home/user1 sans l'option
+\fBsource\fP)
 .TP 
 2.
-\fIVOL\fP/config\-files/user2 (but it would be \fIVOL\fP/home/user2 without the
-\fBsource\fP option)
+\fIVOL\fP/config\-files/user2 (mais ce serait \fIVOL\fP/home/user2 sans l'option
+\fBsource\fP)
 .TP 
 3.
 \fIVOL\fP/home
@@ -135,13 +149,15 @@ The corresponding source directories are:
 4.
 \fIVOL\fP/usr
 .PP
-It was necessary to set the \fBsource\fP options for 1 and 2, since they
-otherwise would become nested with 3's source, which is invalid.
+Il était nécessaire de paramétrer les options \fBsource\fP pour 1 et 2,
+puisqu'autrement ils seraient devenus imbriqués avec la source du 3, ce qui
+est invalide.
 .PP
-Line 3 will be taken care of before line 1 and 2 in order to prevent custom
-mounts 1 and 2 from being hidden by 3. When line 3 is handled, \fIVOL\fP/home
-is simply bind\-mounted on /home. To illustrate what happens for lines 1 and
-2, let's say that the following files exist:
+La ligne 3 sera prise en compte avant les lignes 1 et 2 afin d'éviter que
+les montages personnalisés 1 et 2 ne soient cachés par 3. Lorsque la ligne 3
+est prise en charge, \fIVOL\fP/home est simplement bind\-monté sur /home. Pour
+illustrer ce qu'il se passe pour les lignes 1 et 2, disons que les fichiers
+suivants existent :
 .TP  7
 a.
 \fIVOL\fP/config\-files/user1/.emacs
@@ -152,34 +168,36 @@ b.
 c.
 \fIVOL\fP/config\-files/user2/.ssh/config
 .PP
-Then the following links and directories will be created:
+Puis que les liens et les répertoires suivant seront créés :
 .TP  7
-Link:
-/home/user1/.emacs \-> \fIVOL\fP/config\-files/user1/.emacs (from a)
+Liens :
+/home/user1/.emacs \-> \fIVOL\fP/config\-files/user1/.emacs (depuis a)
 .TP 
-Link:
-/home/user2/.bashrc \-> \fIVOL\fP/config\-files/user2/.bashrc (from b)
+Liens :
+/home/user2/.bashrc \-> \fIVOL\fP/config\-files/user2/.bashrc (depuis b)
 .TP 
-Dir:
-/homea/user2/.ssh (from c)
+Rép :
+/homea/user2/.ssh (depuis c)
 .TP 
-Link:
-/home/user2/.ssh/config \-> \fIVOL\fP/config\-files/user2/.ssh/config (from
+Liens :
+/home/user2/.ssh/config \-> \fIVOL\fP/config\-files/user2/.ssh/config (depuis
 c)
 .PP
-One could argue, though, that lines 1 and 2 in the example
-\fBpersistence.conf\fP file above are unnecessary since line 3 already would
-make all of /home persistent. The \fBlink\fP option is intended for situations
-where you don't want a complete directory to be persistent, only certain
-files in it or its sub\-directories.
+On pourrait dire que les lignes 1 et 2 dans l'exemple de fichier
+\fBpersistence.conf\fP ci\-dessus sont non\-nécessaires puisque la ligne 3
+rendrait déjà presistant l'entierté de /home. L'option \fBlink\fP est pensée
+pour les situations où vous ne voulez pas que tout le répertoire soit
+persistant, mais seulement certains de fichiers y étant présents ou ses
+sous\-répertoires.
 .PP
-Line 4 can be mounted at any time since its \fIDIR\fP (and source directory) is
-completely disjoint from all the other custom mounts. When mounted,
-\fIVOL\fP/usr will be the rw branch due to the \fBunion\fP option, and will only
-contain the difference compared to the underlying read\-only file
-system. Hence packages could be installed into /usr with great space\-wise
-efficiency compared to bind\-mounts, since in the latter case all of /usr
-would have to be copied into \fIVOL\fP/usr during the initial bootstrap.
+La ligne 4 peut être montée n'importe quand puisque son \fIDIR\fP (et
+répertoire source) est complètement disjoint de tous les autres montages
+personnalisés. Lorsque monté, \fIVOL\fP/usr sera la branche rw à cause de
+l'option \fBunion\fP, et contiendra seulement la différence comparée au système
+de fichier en lecture seule sous\-jascent. En conséquence, les paquets
+pourront être installés dans /usr avec une grande efficacité d'empreinte
+d'espace comparé aux montages\-bind, puisque dans ce dernier cas, tout le
+contenu de /usr devra être copié dans \fIVOL\fP/usr pendant l'amorçage inital.
 
 .SH "VOIR AUSSI"
 \fIlive\-boot\fP(7)
